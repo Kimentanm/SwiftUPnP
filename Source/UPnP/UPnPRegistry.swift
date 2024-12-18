@@ -84,7 +84,7 @@ public class UPnPRegistry {
     }
     
     public func startDiscovery(_ types: [String] = ["urn:schemas-upnp-org:device:MediaServer:1", "urn:linn-co-uk:device:Source:1", "urn:av-openhome-org:device:Source:1"]) throws {
-        let filteredTypes = types.filter { $0.contains(":device:") }
+        let filteredTypes = types.filter { $0.contains(":service:") }
         guard filteredTypes.count == types.count else {
             Logger.swiftUPnP.error("Only device types are discovered, service types will be discovered indirectly from the device description. Non-device types will be filtered.")
             return
@@ -193,8 +193,8 @@ public class UPnPRegistry {
               let host = device.url.host,
               let port = device.url.port,
               let baseURL = URL(string: "\(scheme)://\(host):\(port)"),
-              let controlUrl = URL(string: deviceService.controlURL, relativeTo: baseURL),
-              let scpdUrl = URL(string: deviceService.SCPDURL, relativeTo: baseURL) else { return nil }
+              let controlUrl = URL(string: "\(baseURL)/" + deviceService.controlURL.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!, relativeTo: baseURL),
+              let scpdUrl = URL(string: "\(baseURL)/" + deviceService.SCPDURL.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!, relativeTo: baseURL) else { return nil }
         
         let eventUrl = URL(string: deviceService.eventSubURL, relativeTo: baseURL)
         
