@@ -187,14 +187,24 @@ public class UPnPRegistry {
     }
     
     static func typedService(device: UPnPDevice, serviceUrn: String, eventPublisher: AnyPublisher<(String, Data), Never>? = nil, eventCallbackUrl: URL? = nil) -> UPnPService? {
-        guard let deviceServices = device.deviceDefinition?.device.serviceList?.service,
-              let deviceService = deviceServices.first(where: { $0.serviceType == serviceUrn }),
+        let deviceServices = device.deviceDefinition?.device.serviceList?.service
+        let deviceService = deviceServices?.first(where: { $0.serviceType == serviceUrn })
+        var controlURL = deviceService?.controlURL ?? ""
+        if !controlURL.starts(with: "/") {
+            controlURL = "/" + controlURL
+        }
+        var SCPDURL = deviceService?.SCPDURL ?? ""
+        if !SCPDURL.starts(with: "/") {
+            SCPDURL = "/" + SCPDURL
+        }
+        guard let deviceServices,
+              let deviceService,
               let scheme = device.url.scheme,
               let host = device.url.host,
               let port = device.url.port,
               let baseURL = URL(string: "\(scheme)://\(host):\(port)"),
-              let controlUrl = URL(string: deviceService.controlURL, relativeTo: baseURL),
-              let scpdUrl = URL(string: deviceService.SCPDURL, relativeTo: baseURL) else { return nil }
+              let controlUrl = URL(string: controlURL.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!, relativeTo: baseURL),
+              let scpdUrl = URL(string: SCPDURL.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!, relativeTo: baseURL) else { return nil }
         
         let eventUrl = URL(string: deviceService.eventSubURL, relativeTo: baseURL)
         
